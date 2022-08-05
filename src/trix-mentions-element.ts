@@ -28,8 +28,7 @@ const states = new WeakMap()
 
 class TrixMentionsExpander {
   expander: TrixMentionsElement
-  input: TrixEditorInput
-  menu: HTMLElement | null
+  menu: [HTMLElement, boolean] | null
   oninput: (event: Event) => void
   onkeydown: (event: KeyboardEvent) => void
   onpaste: (event: Event) => void
@@ -42,9 +41,8 @@ class TrixMentionsExpander {
   lookBackIndex: number
   interactingWithList: boolean
 
-  constructor(expander: TrixMentionsElement, input: TrixEditorInput) {
+  constructor(expander: TrixMentionsElement) {
     this.expander = expander
-    this.input = input
     this.combobox = null
     this.menu = null
     this.match = null
@@ -57,17 +55,24 @@ class TrixMentionsExpander {
     this.onmousedown = this.onMousedown.bind(this)
     this.onblur = this.onBlur.bind(this)
     this.interactingWithList = false
-    input.addEventListener('paste', this.onpaste)
-    input.addEventListener('input', this.oninput)
-    ;(input.element as HTMLElement).addEventListener('keydown', this.onkeydown)
-    input.addEventListener('blur', this.onblur)
+    expander.addEventListener('paste', this.onpaste)
+    expander.addEventListener('input', this.oninput, {capture: true})
+    expander.addEventListener('keydown', this.onkeydown)
+    expander.addEventListener('focusout', this.onblur)
+  }
+
+  get input(): TrixEditorInput {
+    const input = this.expander.querySelector('trix-editor')
+    assertTrixEditorElement(input)
+
+    return new TrixEditorElementAdapter(input)
   }
 
   destroy() {
-    this.input.removeEventListener('paste', this.onpaste)
-    this.input.removeEventListener('input', this.oninput)
-    ;(this.input.element as HTMLElement).removeEventListener('keydown', this.onkeydown)
-    this.input.removeEventListener('blur', this.onblur)
+    this.expander.removeEventListener('paste', this.onpaste)
+    this.expander.removeEventListener('input', this.oninput, {capture: true})
+    this.expander.removeEventListener('keydown', this.onkeydown)
+    this.expander.removeEventListener('focusout', this.onblur)
   }
 
   dismissMenu() {
@@ -85,11 +90,15 @@ class TrixMentionsExpander {
     }
 
     this.deactivate()
-    this.menu = menu
+    this.menu = [menu, menu.isConnected]
 
     if (!menu.id) menu.id = `trix-mentions-${Math.floor(Math.random() * 100000).toString()}`
-    this.expander.append(menu)
-    this.combobox = new Combobox((this.input as unknown) as HTMLTextAreaElement, menu)
+    if (menu.isConnected) {
+      menu.hidden = false
+    } else {
+      this.expander.append(menu)
+    }
+    this.combobox = new Combobox((this.input.element as unknown) as HTMLTextAreaElement, menu)
     this.input.setAttribute('role', 'combobox')
     this.input.setAttribute('aria-multiline', 'false')
 
@@ -106,8 +115,9 @@ class TrixMentionsExpander {
   }
 
   private deactivate() {
-    const menu = this.menu
-    if (!menu || !this.combobox) return false
+    if (!this.menu || !this.combobox) return false
+
+    const [menu, isConnected] = this.menu
     this.menu = null
 
     menu.removeEventListener('combobox-commit', this.oncommit)
@@ -117,7 +127,11 @@ class TrixMentionsExpander {
     this.combobox = null
     this.input.removeAttribute('aria-multiline')
     this.input.setAttribute('role', 'textbox')
-    menu.remove()
+    if (isConnected) {
+      menu.hidden = true
+    } else {
+      menu.remove()
+    }
 
     return true
   }
@@ -131,7 +145,7 @@ class TrixMentionsExpander {
     if (!match) return
 
     const selectionStart = match.position - match.key.length
-    const selectionEnd = match.position + match.text.length
+    const selectionEnd = match.position + match.text.length + 1
 
     const detail = {item, key: match.key, value: null}
     const canceled = !this.expander.dispatchEvent(new CustomEvent('trix-mentions-value', {cancelable: true, detail}))
@@ -155,7 +169,8 @@ class TrixMentionsExpander {
     this.match = null
   }
 
-  private onBlur() {
+  private onBlur({target}: Event) {
+    if (target !== this.input.element) return
     if (this.interactingWithList) {
       this.interactingWithList = false
       return
@@ -164,11 +179,13 @@ class TrixMentionsExpander {
     this.deactivate()
   }
 
-  private onPaste() {
+  private onPaste({target}: Event) {
+    if (target !== this.input.element) return
     this.justPasted = true
   }
 
-  async onInput() {
+  async onInput({target}: Event) {
+    if (target !== this.input.element) return
     if (this.justPasted) {
       this.justPasted = false
       return
@@ -229,6 +246,7 @@ class TrixMentionsExpander {
   }
 
   private onKeydown(event: KeyboardEvent) {
+    if (event.target !== this.input.element) return
     if (event.key === 'Escape') {
       this.match = null
       if (this.deactivate()) {
@@ -252,9 +270,7 @@ export default class TrixMentionsElement extends HTMLElement {
   }
 
   connectedCallback(): void {
-    const input = this.querySelector('trix-editor')
-    assertTrixEditorElement(input)
-    const state = new TrixMentionsExpander(this, new TrixEditorElementAdapter(input))
+    const state = new TrixMentionsExpander(this)
     states.set(this, state)
   }
 

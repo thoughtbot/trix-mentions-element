@@ -1,6 +1,10 @@
 import {WrapperComponent} from './wrapper-component'
 
 describe('trix-mentions element', function () {
+  afterEach(function () {
+    document.body.innerHTML = ''
+  })
+
   describe('element creation', function () {
     it('creates from document.createElement', function () {
       const el = document.createElement('trix-mentions')
@@ -16,16 +20,11 @@ describe('trix-mentions element', function () {
 
   describe('after tree insertion', function () {
     beforeEach(function () {
-      document.body.insertAdjacentHTML(
-        'afterbegin',
-        `<trix-mentions keys=": @ [[">
-           <trix-editor></trix-editor>
-         </trix-mentions>`
-      )
-    })
-
-    afterEach(function () {
-      for (const element of document.body.children) element.remove()
+      document.body.innerHTML = `
+        <trix-mentions keys=": @ [[">
+          <trix-editor></trix-editor>
+        </trix-mentions>
+      `
     })
 
     it('has activation keys', function () {
@@ -115,16 +114,23 @@ describe('trix-mentions element', function () {
       assert.equal(input.getAttribute('aria-multiline'), null)
     })
 
-    describe('committing without a trix-mentions-value listener', function () {
-      it('forwards the [data-trix-attachment] attribute to the Trix.Attachment instance', async function () {
+    describe('committing', function () {
+      beforeEach(function () {
+        document.body.innerHTML = `
+          <trix-mentions keys="#">
+            <trix-editor></trix-editor>
+            <ul role="listbox" hidden>
+              <li role="option">an option</li>
+            </ul>
+          </trix-mentions>`
+      })
+
+      it('forwards the [data-trix-attachment] attribute to the Trix.Attachment instance without a trix-mentions-value listener', async function () {
         const attachmentOptions = {content: 'content override', contentType: 'ignored'}
         const expander = document.querySelector('trix-mentions')
         const input = expander.querySelector('trix-editor')
-        const menu = document.createElement('ul')
-        menu.role = 'listbox'
-        const item = document.createElement('li')
-        item.role = 'option'
-        item.textContent = 'an option'
+        const menu = document.querySelector('ul')
+        const item = document.querySelector('li')
         item.setAttribute('data-trix-attachment', JSON.stringify(attachmentOptions))
         item.setAttribute('data-ignored-attribute', 'ignored')
         item.setAttribute('data-trix-attachment-content-type', 'mime')
@@ -136,7 +142,7 @@ describe('trix-mentions element', function () {
         })
 
         input.focus()
-        triggerInput(input, ':')
+        triggerInput(input, '#')
         await waitForAnimationFrame()
         item.click()
         await waitForAnimationFrame()
@@ -148,21 +154,37 @@ describe('trix-mentions element', function () {
         assert.equal('mime', figure.getAttribute('data-trix-content-type'))
         assert(figure.textContent.includes(item.textContent))
       })
+
+      it('advances the cursor to after the attachment content', async function () {
+        const expander = document.querySelector('trix-mentions')
+        const input = expander.querySelector('trix-editor')
+        const menu = document.querySelector('ul')
+        const item = document.querySelector('li')
+
+        expander.addEventListener('trix-mentions-change', ({detail: {provide}}) => {
+          provide(Promise.resolve({matched: true, fragment: menu}))
+        })
+
+        input.focus()
+        triggerInput(input, '#', true)
+        await waitForAnimationFrame()
+        triggerInput(input, 'z', true)
+        await waitForAnimationFrame()
+        item.click()
+        await waitForAnimationFrame()
+
+        const value = input.editor.getDocument()
+        assert.equal(value.toString().includes('z'), false)
+      })
     })
   })
 
   describe('multi-word scenarios', function () {
     beforeEach(function () {
-      document.body.insertAdjacentHTML(
-        'afterbegin',
-        `<trix-mentions keys="@ # [[" multiword="# [[">
-           <trix-editor></trix-editor>
-         </trix-mentions>`
-      )
-    })
-
-    afterEach(function () {
-      for (const element of document.body.children) element.remove()
+      document.body.innerHTML = `
+        <trix-mentions keys="@ # [[" multiword="# [[">
+          <trix-editor></trix-editor>
+        </trix-mentions>`
     })
 
     it('has activation keys', function () {
@@ -263,17 +285,47 @@ describe('trix-mentions element', function () {
     })
   })
 
+  describe('when the menu is already connected to the document', function () {
+    beforeEach(function () {
+      document.body.innerHTML = `
+        <trix-mentions keys=":">
+          <trix-editor></trix-editor>
+          <ul role="listbox" hidden>
+            <li role="option">an option</li>
+          </ul>
+        </trix-mentions>`
+    })
+
+    it('toggles the visibility when activated and deactivated', async function () {
+      const expander = document.querySelector('trix-mentions')
+      const input = expander.querySelector('trix-editor')
+      const menu = document.querySelector('ul')
+      const item = document.querySelector('li')
+
+      expander.addEventListener('trix-mentions-change', ({detail: {provide}}) => {
+        provide(Promise.resolve({matched: true, fragment: menu}))
+      })
+
+      input.focus()
+      triggerInput(input, ':')
+      await waitForAnimationFrame()
+
+      assert.equal(menu.hidden, false)
+
+      item.click()
+      await waitForAnimationFrame()
+
+      assert.equal(menu.hidden, true)
+    })
+  })
+
   describe('use inside a ShadowDOM', function () {
     before(function () {
       customElements.define('wrapper-component', WrapperComponent)
     })
 
     beforeEach(function () {
-      document.body.insertAdjacentHTML('afterbegin', '<wrapper-component></wrapper-component>')
-    })
-
-    afterEach(function () {
-      for (const element of document.body.children) element.remove()
+      document.body.innerHTML = '<wrapper-component></wrapper-component>'
     })
 
     it('show results on input', async function () {
