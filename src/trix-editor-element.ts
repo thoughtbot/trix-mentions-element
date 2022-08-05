@@ -16,17 +16,6 @@ export interface TrixEditorInput {
 
   selectionEnd: number
 
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
-  ): void
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions
-  ): void
-
   focus(options?: FocusOptions): void
 
   setAttribute(name: string, value: string): void
@@ -38,22 +27,6 @@ export class TrixEditorElementAdapter implements TrixEditorInput {
 
   constructor(element: TrixEditorElement) {
     this.element = element
-  }
-
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
-  ): void {
-    this.element.addEventListener(type, listener, options)
-  }
-
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions
-  ): void {
-    this.element.removeEventListener(type, listener, options)
   }
 
   focus(options?: FocusOptions): void {
@@ -69,9 +42,9 @@ export class TrixEditorElementAdapter implements TrixEditorInput {
   }
 
   get selectionEnd(): number {
-    const selectionRange = this.element.editor.getSelectedRange()
+    const [, selectionEnd] = this.editor.getSelectedRange()
 
-    return selectionRange[1]
+    return selectionEnd
   }
 
   get value(): string {
