@@ -299,8 +299,8 @@ describe('trix-mentions element', function () {
     it('toggles the visibility when activated and deactivated', async function () {
       const expander = document.querySelector('trix-mentions')
       const input = expander.querySelector('trix-editor')
-      const menu = document.querySelector('ul')
-      const item = document.querySelector('li')
+      const menu = expander.querySelector('ul')
+      const item = expander.querySelector('li')
 
       expander.addEventListener('trix-mentions-change', ({detail: {provide}}) => {
         provide(Promise.resolve({matched: true, fragment: menu}))
@@ -310,12 +310,16 @@ describe('trix-mentions element', function () {
       triggerInput(input, ':')
       await waitForAnimationFrame()
 
-      assert.equal(menu.hidden, false)
+      assert(menu.isConnected)
+      assert.deepEqual([menu], Array.from(expander.querySelectorAll('ul')))
+      assert.equal(false, menu.hidden)
 
       item.click()
       await waitForAnimationFrame()
 
-      assert.equal(menu.hidden, true)
+      assert(menu.isConnected)
+      assert.equal(expander, menu.parentElement)
+      assert.equal(true, menu.hidden)
     })
   })
 
@@ -347,12 +351,12 @@ function once(element, eventName) {
 
 function triggerInput(input, value, onlyAppend = false) {
   const editor = input.editor
-  const [, selectionEnd] = editor.getSelectedRange()
+  const selectionEnd = editor.getPosition()
   if (onlyAppend) {
-    editor.setSelectedRange([selectionEnd, selectionEnd])
+    editor.setSelectedRange(selectionEnd)
     editor.insertString(value)
   } else {
-    editor.setSelectedRange([0, 0])
+    editor.setSelectedRange([0, selectionEnd])
     editor.insertString(value)
   }
   return input.dispatchEvent(new InputEvent('input'))

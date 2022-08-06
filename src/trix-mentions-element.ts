@@ -145,7 +145,7 @@ class TrixMentionsExpander {
     if (!match) return
 
     const selectionStart = match.position - match.key.length
-    const selectionEnd = match.position + match.text.length + 1
+    const selectionEnd = match.position + match.text.length
 
     const detail = {item, key: match.key, value: null}
     const canceled = !this.expander.dispatchEvent(new CustomEvent('trix-mentions-value', {cancelable: true, detail}))
@@ -212,7 +212,7 @@ class TrixMentionsExpander {
 
   findMatch(): Match | void {
     const cursor = this.input.selectionEnd || 0
-    const text = this.input.value
+    const text = this.input.value.replace(/\n+$/, '')
     if (cursor <= this.lookBackIndex) {
       this.lookBackIndex = cursor - 1
     }
