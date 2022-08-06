@@ -53,7 +53,7 @@ export class TrixEditorElementAdapter implements TrixEditorInput {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions
   ): void {
-    this.element.addEventListener(type, listener, options)
+    this.element.removeEventListener(type, listener, options)
   }
 
   focus(options?: FocusOptions): void {
