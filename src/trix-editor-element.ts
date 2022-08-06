@@ -4,8 +4,8 @@ export type TrixEditor = {
   deleteInDirection(direction: 'backward'): void
   insertAttachment(attachment: TrixAttachment): void
   getDocument(): TrixDocument
-  getSelectedRange(): [number, number]
-  setSelectedRange(range: [number, number]): void
+  getPosition(): number
+  setSelectedRange(range: number | [number] | [number, number]): void
 }
 export type TrixEditorElement = HTMLElement & {editor: TrixEditor}
 
@@ -42,9 +42,7 @@ export class TrixEditorElementAdapter implements TrixEditorInput {
   }
 
   get selectionEnd(): number {
-    const [, selectionEnd] = this.editor.getSelectedRange()
-
-    return selectionEnd
+    return this.editor.getPosition() + 1
   }
 
   get value(): string {
