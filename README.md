@@ -19,7 +19,10 @@ $ npm install --save @thoughtbot/trix-mentions-element
 Import as ES modules:
 
 ```js
+import Trix from 'trix'
 import '@thoughtbot/trix-mentions-element'
+
+window.Trix = Trix
 ```
 
 With a script tag:
