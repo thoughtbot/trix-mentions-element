@@ -126,7 +126,7 @@ describe('trix-mentions element', function () {
       })
 
       it('forwards the [data-trix-attachment] attribute to the Trix.Attachment instance without a trix-mentions-value listener', async function () {
-        const attachmentOptions = {content: 'content override', contentType: 'ignored'}
+        const attachmentOptions = {contentType: 'ignored', sgid: 'a-hash'}
         const expander = document.querySelector('trix-mentions')
         const input = expander.querySelector('trix-editor')
         const menu = document.querySelector('ul')
@@ -148,7 +148,8 @@ describe('trix-mentions element', function () {
         await waitForAnimationFrame()
 
         const figure = input.querySelector('figure')
-        const {content, contentType} = JSON.parse(figure.getAttribute('data-trix-attachment'))
+        const {content, contentType, sgid} = JSON.parse(figure.getAttribute('data-trix-attachment'))
+        assert.equal(sgid, 'a-hash')
         assert.equal(item.textContent, content)
         assert.equal('mime', contentType)
         assert.equal('mime', figure.getAttribute('data-trix-content-type'))
