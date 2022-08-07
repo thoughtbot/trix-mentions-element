@@ -3,6 +3,7 @@ export type TrixDocument = {toString(): string}
 export type TrixEditor = {
   deleteInDirection(direction: 'backward'): void
   insertAttachment(attachment: TrixAttachment): void
+  getClientRectAtPosition(position: number): DOMRect
   getDocument(): TrixDocument
   getPosition(): number
   setSelectedRange(range: number | [number] | [number, number]): void
@@ -46,7 +47,7 @@ export class TrixEditorElementAdapter implements TrixEditorInput {
   }
 
   get value(): string {
-    return valueOf(this.element)
+    return this.editor.getDocument().toString()
   }
 
   get editor(): TrixEditor {
@@ -77,10 +78,6 @@ function extractDataAttribute(dataset: DOMStringMap, key: string, prefix: string
   const name = firstCharacter.toLowerCase() + rest
 
   return [name, value]
-}
-
-export function valueOf(element: TrixEditorElement): string {
-  return element.editor.getDocument().toString()
 }
 
 export function buildTrixAttachment(elementOrOptions: HTMLElement | Record<string, any>): TrixAttachment | null {
