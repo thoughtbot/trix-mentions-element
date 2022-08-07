@@ -124,6 +124,35 @@ Often times, when `[role="option"]` elements encode the `Trix.Attachment`
 arguments into their `data-trix-attachment`-prefixed attributes,
 `trix-mentions-value` event listeners can be omitted entirely.
 
+## Built-in support for Turbo Frames
+
+All `<trix-mentions>` elements have built-in support for driving
+[`<turbo-frame>` elements][turbo-frame].
+
+First, render them with a `[name]` attribute to serve as the query parameter
+key, and a `[data-turbo-frame]` attribute that references a `<turbo-frame>`
+element with a matching `[id]` attribute:
+
+```html
+<trix-mentions key="@" name="query" data-turbo-frame="users">
+  <trix-editor></trix-editor>
+</trix-mentions>
+<turbo-frame id="users" role="listbox" hidden></turbo-frame>
+```
+
+Make sure to render the `<turbo-frame>` with the `[hidden]` attribute to start.
+
+Then, whenever a `trix-mentions-change` event is dispatched that bubbles without
+any calls to `CustomEvent.detail.provide`, the `<trix-mentions>` element will
+merge its current match's text into the into the `<turbo-frame>` element's
+`[src]` attribute, using the `[name]` attribute as its key. It'll wait for the
+[FrameElement.loaded][] promise to resolve before proceeding. Finally, it'll
+manage the `<turbo-frame>` element's `[hidden]` attribute and keep it
+synchronized with the visibility of the expanded list of options.
+
+[turbo-frame]: https://turbo.hotwired.dev/handbook/introduction#turbo-frames%3A-decompose-complex-pages
+[FrameElement.loaded]: https://turbo.hotwired.dev/reference/frames#properties
+
 ## Browser support
 
 Browsers without native [custom element support][support] require a [polyfill][].

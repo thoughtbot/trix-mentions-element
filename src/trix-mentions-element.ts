@@ -7,6 +7,7 @@ import {
   assertTrixEditorElement,
   buildTrixAttachment
 } from './trix-editor-element'
+import {getFrameElementById, setSearchParam} from './turbo'
 
 type Match = {
   text: string
@@ -236,9 +237,13 @@ class TrixMentionsExpander {
     )
     if (canceled) return
 
-    const all = await Promise.all(providers)
-    const fragments = all.filter(x => x.matched).map(x => x.fragment)
-    return fragments[0]
+    if (providers.length > 0) {
+      const all = await Promise.all(providers)
+      const fragments = all.filter(x => x.matched).map(x => x.fragment)
+      return fragments[0]
+    } else {
+      return this.driveTurboFrame(match)
+    }
   }
 
   private onMousedown() {
@@ -256,6 +261,19 @@ class TrixMentionsExpander {
       }
     }
   }
+
+  private async driveTurboFrame(match: Match): Promise<HTMLElement | void> {
+    const name = this.expander.name
+    const frame = getFrameElementById(this.expander.getAttribute('data-turbo-frame'))
+
+    if (name && frame) {
+      await setSearchParam(frame, name, match.text)
+
+      if (frame.childElementCount > 0) {
+        return frame
+      }
+    }
+  }
 }
 export default class TrixMentionsElement extends HTMLElement {
   get keys(): Key[] {
@@ -267,6 +285,18 @@ export default class TrixMentionsElement extends HTMLElement {
     const globalMultiWord = multiWord.length === 0 && this.hasAttribute('multiword')
 
     return keys.map(key => ({key, multiWord: globalMultiWord || multiWord.includes(key)}))
+  }
+
+  get name(): string | null {
+    return this.getAttribute('name')
+  }
+
+  set name(value: string | null) {
+    if (typeof value === 'string') {
+      this.setAttribute('name', value)
+    } else {
+      this.removeAttribute('name')
+    }
   }
 
   connectedCallback(): void {

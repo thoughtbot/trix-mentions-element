@@ -323,6 +323,61 @@ describe('trix-mentions element', function () {
     })
   })
 
+  describe('driving a turbo-frame', function () {
+    it('writes its [name] and text to the turbo-frame[src]', async function () {
+      document.body.innerHTML = `
+        <trix-mentions keys=":" name="query" data-turbo-frame="menu">
+          <trix-editor></trix-editor>
+        </trix-mentions>
+        <turbo-frame id="menu" src="/path?c=d" role="listbox" hidden>
+          <button role="option">a</button>
+        </turbo-frame>
+      `
+      const input = document.querySelector('trix-editor')
+      const frame = document.querySelector('turbo-frame')
+      triggerInput(input, ':a')
+      await waitForAnimationFrame()
+
+      assert.equal(
+        new URL(frame.getAttribute('src'), document.baseURI).toString(),
+        new URL('/path?c=d&query=a', document.baseURI).toString()
+      )
+      assert.equal(frame.hidden, false)
+    })
+
+    it('writes its [name] and text to the turbo-frame[src]', async function () {
+      document.body.innerHTML = `
+        <trix-mentions keys=":" name="query" data-turbo-frame="menu">
+          <trix-editor></trix-editor>
+        </trix-mentions>
+        <turbo-frame id="menu" src="/path" role="listbox" hidden></turbo-frame>
+      `
+      const input = document.querySelector('trix-editor')
+      const frame = document.querySelector('turbo-frame')
+      triggerInput(input, ':a')
+      await waitForAnimationFrame()
+
+      assert.equal(frame.hidden, true)
+    })
+
+    it('does not drive a turbo-frame[disabled]', async function () {
+      document.body.innerHTML = `
+        <trix-mentions keys=":" name="query" data-turbo-frame="menu">
+          <trix-editor></trix-editor>
+        </trix-mentions>
+        <turbo-frame id="menu" src="/path" role="listbox" hidden disabled></turbo-frame>
+      `
+      const input = document.querySelector('trix-editor')
+      const frame = document.querySelector('turbo-frame')
+      triggerInput(input, ':a')
+      await waitForAnimationFrame()
+
+      assert.equal(frame.getAttribute('src'), '/path')
+      assert(frame.hasAttribute('disabled'))
+      assert(frame.hidden)
+    })
+  })
+
   describe('use inside a ShadowDOM', function () {
     before(function () {
       customElements.define('wrapper-component', WrapperComponent)
