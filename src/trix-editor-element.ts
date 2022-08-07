@@ -61,10 +61,11 @@ declare global {
   }
 }
 
-function getJSONAttribute(element: HTMLElement, key: string): any {
+function getJSONAttribute(element: HTMLElement, key: string): Record<string, unknown> {
   try {
     const value = element.getAttribute(key)
-    JSON.parse(value || '{}')
+
+    return JSON.parse(value || '{}')
   } catch {
     return {}
   }
@@ -80,7 +81,7 @@ function extractDataAttribute(dataset: DOMStringMap, key: string, prefix: string
   return [name, value]
 }
 
-export function buildTrixAttachment(elementOrOptions: HTMLElement | Record<string, any>): TrixAttachment | null {
+export function buildTrixAttachment(elementOrOptions: HTMLElement | Record<string, unknown>): TrixAttachment | null {
   const attribute = 'data-trix-attachment'
   const prefix = 'trixAttachment'
 
@@ -89,7 +90,7 @@ export function buildTrixAttachment(elementOrOptions: HTMLElement | Record<strin
 
     const defaults = {content: element.innerHTML}
     const options = getJSONAttribute(element, attribute)
-    const overrides: Record<string, any> = {}
+    const overrides: Record<string, unknown> = {}
 
     const {dataset} = element
     for (const key in dataset) {
