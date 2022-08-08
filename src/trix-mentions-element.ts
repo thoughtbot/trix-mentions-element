@@ -267,7 +267,11 @@ class TrixMentionsExpander {
     const frame = getFrameElementById(this.expander.getAttribute('data-turbo-frame'))
 
     if (name && frame) {
-      await setSearchParam(frame, name, match.text)
+      const src = this.expander.src || frame.getAttribute('src') || ''
+
+      const url = await setSearchParam(frame, src, name, match.text)
+
+      this.expander.src = url.toString()
 
       if (frame.childElementCount > 0) {
         return frame
@@ -287,15 +291,27 @@ export default class TrixMentionsElement extends HTMLElement {
     return keys.map(key => ({key, multiWord: globalMultiWord || multiWord.includes(key)}))
   }
 
+  get src(): string | null {
+    return this.getAttribute('src')
+  }
+
+  set src(value: string | null) {
+    if (value === null || typeof value === 'undefined') {
+      this.removeAttribute('src')
+    } else {
+      this.setAttribute('src', value)
+    }
+  }
+
   get name(): string | null {
     return this.getAttribute('name')
   }
 
   set name(value: string | null) {
-    if (typeof value === 'string') {
-      this.setAttribute('name', value)
-    } else {
+    if (value === null || typeof value === 'undefined') {
       this.removeAttribute('name')
+    } else {
+      this.setAttribute('name', value)
     }
   }
 
