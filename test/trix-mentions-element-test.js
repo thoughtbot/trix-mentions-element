@@ -338,9 +338,8 @@ describe('trix-mentions element', function () {
       triggerInput(input, ':a')
       await waitForAnimationFrame()
 
-      const url = expandURL('/path?query=a')
-      assert.equal(expandURL(frame.getAttribute('src')), url)
-      assert.equal(expandURL(expander.getAttribute('src')), url)
+      assert.equal(expandURL(frame.getAttribute('src')), expandURL('/path?query=a'))
+      assert.equal(expandURL(expander.getAttribute('src')), expandURL('/path'))
     })
 
     it('writes its [name] and text to the turbo-frame[src]', async function () {
@@ -356,9 +355,8 @@ describe('trix-mentions element', function () {
       triggerInput(input, ':a')
       await waitForAnimationFrame()
 
-      const url = expandURL('/path?c=d&query=a')
-      assert.equal(expandURL(frame.getAttribute('src')), url)
-      assert.equal(expandURL(expander.getAttribute('src')), url)
+      assert.equal(expandURL(frame.getAttribute('src')), expandURL('/path?c=d&query=a'))
+      assert.equal(expandURL(expander.getAttribute('src')), null)
     })
 
     it('does not drive a turbo-frame[disabled]', async function () {

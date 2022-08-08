@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Change: only write `[name]` and match text to `turbo-frame[src]`, don't alter
+  `trix-mentions[src]`
+
 ## [0.1.0] - 2022-08-07
 
 - Add support for reading the URL directly from `trix-mentions[src]`, then

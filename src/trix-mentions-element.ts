@@ -267,11 +267,7 @@ class TrixMentionsExpander {
     const frame = getFrameElementById(this.expander.getAttribute('data-turbo-frame'))
 
     if (name && frame) {
-      const src = this.expander.src || frame.getAttribute('src') || ''
-
-      const url = await setSearchParam(frame, src, name, match.text)
-
-      this.expander.src = url.toString()
+      await setSearchParam(frame, this.expander.src, name, match.text)
 
       if (frame.childElementCount > 0) {
         return frame
