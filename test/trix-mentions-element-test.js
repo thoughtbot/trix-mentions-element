@@ -325,25 +325,22 @@ describe('trix-mentions element', function () {
   })
 
   describe('driving a turbo-frame', function () {
-    it('writes its [name] and text to the turbo-frame[src]', async function () {
+    it('merges its [name] and text into its [src] attribute, then writes it to the turbo-frame[src]', async function () {
       document.body.innerHTML = `
-        <trix-mentions keys=":" name="query" data-turbo-frame="menu">
+        <trix-mentions keys=":" name="query" src="/path" data-turbo-frame="menu">
           <trix-editor></trix-editor>
         </trix-mentions>
-        <turbo-frame id="menu" src="/path?c=d" role="listbox" hidden>
-          <button role="option">a</button>
-        </turbo-frame>
+        <turbo-frame id="menu" role="listbox" hidden></turbo-frame>
       `
+      const expander = document.querySelector('trix-mentions')
       const input = document.querySelector('trix-editor')
       const frame = document.querySelector('turbo-frame')
       triggerInput(input, ':a')
       await waitForAnimationFrame()
 
-      assert.equal(
-        new URL(frame.getAttribute('src'), document.baseURI).toString(),
-        new URL('/path?c=d&query=a', document.baseURI).toString()
-      )
-      assert.equal(frame.hidden, false)
+      const url = expandURL('/path?query=a')
+      assert.equal(expandURL(frame.getAttribute('src')), url)
+      assert.equal(expandURL(expander.getAttribute('src')), url)
     })
 
     it('writes its [name] and text to the turbo-frame[src]', async function () {
@@ -351,14 +348,17 @@ describe('trix-mentions element', function () {
         <trix-mentions keys=":" name="query" data-turbo-frame="menu">
           <trix-editor></trix-editor>
         </trix-mentions>
-        <turbo-frame id="menu" src="/path" role="listbox" hidden></turbo-frame>
+        <turbo-frame id="menu" src="/path?c=d" role="listbox" hidden></turbo-frame>
       `
+      const expander = document.querySelector('trix-mentions')
       const input = document.querySelector('trix-editor')
       const frame = document.querySelector('turbo-frame')
       triggerInput(input, ':a')
       await waitForAnimationFrame()
 
-      assert.equal(frame.hidden, true)
+      const url = expandURL('/path?c=d&query=a')
+      assert.equal(expandURL(frame.getAttribute('src')), url)
+      assert.equal(expandURL(expander.getAttribute('src')), url)
     })
 
     it('does not drive a turbo-frame[disabled]', async function () {
@@ -422,4 +422,14 @@ async function waitForAnimationFrame() {
   return new Promise(resolve => {
     window.requestAnimationFrame(resolve)
   })
+}
+
+function expandURL(pathnameOrURL) {
+  if (pathnameOrURL === null || typeof pathnameOrURL === 'undefined') {
+    return null
+  } else {
+    const url = new URL(pathnameOrURL, document.baseURI)
+
+    return url.toString()
+  }
 }

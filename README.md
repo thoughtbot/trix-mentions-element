@@ -44,6 +44,10 @@ With a script tag:
 - `keys` is a space separated list of menu activation keys
 - `multiword` defines whether the expansion should use several words or not
   - you can provide a space separated list of activation keys that should support multi-word matching
+- `name` is the name of the key used when merging a match's text into a URL
+- `src` the path or URL to retrieve options from
+- `data-turbo-frame` used to identify which [`<turbo-frame>`][turbo-frame] element to
+  navigate when the menu of options is active
 
 ## Events
 
@@ -53,6 +57,17 @@ With a script tag:
 - `text`: The matched text; for example: `cat`, for `@cat`.
   - If the `key` is specified in the `multiword` attribute then the matched text can contain multiple words; for example `cat and dog` for `@cat and dog`.
 - `provide`: A function to be called when you have the menu results. Takes a `Promise` with `{matched: boolean, fragment: HTMLElement}` where `matched` tells the element whether a suggestion is available, and `fragment` is the menu content to be displayed on the page.
+
+> **Warning**
+>
+> Event listener callbacks are synchronous and will not block to wait for
+> `Promise` resolution. If your `provide` callback is asynchronous, make sure
+> to chain additional `Promise` instances with [Promise.then][], or make sure to
+> nest any [`async` or `await`][async] keywords _within_ the callback function
+> passed to `detail.provide`.
+
+[Promise.then]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then
+[async]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function
 
 ```js
 const expander = document.querySelector('trix-mentions')
@@ -144,11 +159,15 @@ Make sure to render the `<turbo-frame>` with the `[hidden]` attribute to start.
 
 Then, whenever a `trix-mentions-change` event is dispatched that bubbles without
 any calls to `CustomEvent.detail.provide`, the `<trix-mentions>` element will
-merge its current match's text into the into the `<turbo-frame>` element's
-`[src]` attribute, using the `[name]` attribute as its key. It'll wait for the
-[FrameElement.loaded][] promise to resolve before proceeding. Finally, it'll
-manage the `<turbo-frame>` element's `[hidden]` attribute and keep it
-synchronized with the visibility of the expanded list of options.
+merge its current match's text into its `[src]` attribute (using the `[name]`
+attribute as its key) then write that value to the `<turbo-frame>` element's
+`[src]` attribute. It'll wait for the [FrameElement.loaded][] promise to resolve
+before proceeding. When the `<trix-mentions>` element's `[src]` attribute is
+missing, it'll merge the name-value pair directly into the `<turbo-frame>`
+element's `[src]` attribute's search parameters.
+
+Finally, it'll manage the `<turbo-frame>` element's `[hidden]` attribute and
+keep it synchronized with the visibility of the expanded list of options.
 
 [turbo-frame]: https://turbo.hotwired.dev/handbook/introduction#turbo-frames%3A-decompose-complex-pages
 [FrameElement.loaded]: https://turbo.hotwired.dev/reference/frames#properties

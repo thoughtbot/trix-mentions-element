@@ -40,10 +40,10 @@
 
     <h2>Turbo Frame integration</h2>
     <p>Use <code>@</code> to trigger the expander</p>
-    <trix-mentions keys="@" name="query" data-turbo-frame="users">
+    <trix-mentions keys="@" name="query" src="/examples/users.html" data-turbo-frame="users">
       <trix-editor class="trix-content" autofocus></trix-editor>
     </trix-mentions>
-    <turbo-frame id="users" role="listbox" src="/examples/users.html" hidden></turbo-frame>
+    <turbo-frame id="users" role="listbox" hidden></turbo-frame>
 
     <script type="text/javascript">
       const expanders = document.querySelectorAll('trix-mentions')
