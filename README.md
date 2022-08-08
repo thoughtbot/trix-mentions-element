@@ -371,6 +371,8 @@ npm install
 npm test
 ```
 
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## License
 
 Distributed under the MIT license. See LICENSE for details.
