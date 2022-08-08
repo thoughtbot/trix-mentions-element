@@ -6,12 +6,10 @@ export function getFrameElementById(id: string | null): FrameElement | null {
   return document.querySelector<FrameElement>(`turbo-frame#${id}:not([disabled])`)
 }
 
-export async function setSearchParam(element: FrameElement, src: string, name: string, value: string): Promise<URL> {
-  const url = new URL(src, element.baseURI)
+export function setSearchParam(element: FrameElement, src: string | null, name: string, value: string): Promise<void> {
+  const url = new URL(src || element.getAttribute('src') || '', element.baseURI)
   url.searchParams.set(name, value)
   element.setAttribute('src', url.toString())
 
-  await (element.loaded || Promise.resolve())
-
-  return url
+  return element.loaded || Promise.resolve()
 }
