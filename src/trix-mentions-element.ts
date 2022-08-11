@@ -103,7 +103,7 @@ class TrixMentionsExpander {
     this.input.setAttribute('role', 'combobox')
     this.input.setAttribute('aria-multiline', 'false')
 
-    const {bottom, left} = textFieldSelectionPosition(this.input.element, match.position)
+    const {bottom, left} = textFieldSelectionPosition(this.input, match.position)
     menu.style.top = `${bottom}px`
     menu.style.left = `${left}px`
 
