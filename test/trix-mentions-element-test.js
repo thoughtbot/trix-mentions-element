@@ -120,7 +120,7 @@ describe('trix-mentions element', function () {
           <trix-mentions keys="#">
             <trix-editor></trix-editor>
             <ul role="listbox" hidden>
-              <li role="option">an option</li>
+              <li id="option-1" role="option">an option</li>
             </ul>
           </trix-mentions>`
       })
@@ -144,6 +144,7 @@ describe('trix-mentions element', function () {
         input.focus()
         triggerInput(input, '#')
         await waitForAnimationFrame()
+
         item.click()
         await waitForAnimationFrame()
 
@@ -160,7 +161,9 @@ describe('trix-mentions element', function () {
         const expander = document.querySelector('trix-mentions')
         const input = expander.querySelector('trix-editor')
         const menu = document.querySelector('ul')
-        const item = document.querySelector('li')
+        menu.insertAdjacentHTML('beforeend', '<li id="option-2" role="option">another option</li>')
+        const option1 = document.querySelector('li:nth-of-type(1)')
+        const option2 = document.querySelector('li:nth-of-type(2)')
 
         expander.addEventListener('trix-mentions-change', ({detail: {provide}}) => {
           provide(Promise.resolve({matched: true, fragment: menu}))
@@ -169,9 +172,19 @@ describe('trix-mentions element', function () {
         input.focus()
         triggerInput(input, '#', true)
         await waitForAnimationFrame()
+
+        assert.equal(option1.getAttribute('aria-selected'), 'true')
+        assert.equal(option2.getAttribute('aria-selected'), 'false')
+
+        triggerKeydown(input, 'ArrowDown')
+        await waitForAnimationFrame()
+
+        assert.equal(option1.getAttribute('aria-selected'), 'false')
+        assert.equal(option2.getAttribute('aria-selected'), 'true')
+
         triggerInput(input, 'z', true)
         await waitForAnimationFrame()
-        item.click()
+        option1.click()
         await waitForAnimationFrame()
 
         const value = input.editor.getDocument()
@@ -406,14 +419,16 @@ function once(element, eventName) {
 function triggerInput(input, value, onlyAppend = false) {
   const editor = input.editor
   const selectionEnd = editor.getPosition()
-  if (onlyAppend) {
-    editor.setSelectedRange(selectionEnd)
-    editor.insertString(value)
-  } else {
-    editor.setSelectedRange([0, selectionEnd])
-    editor.insertString(value)
-  }
+  const selectedRange = onlyAppend ? selectionEnd : [0, selectionEnd]
+
+  editor.setSelectedRange(selectedRange)
+  editor.insertString(value)
+
   return input.dispatchEvent(new InputEvent('input'))
+}
+
+function triggerKeydown(element, key) {
+  return element.dispatchEvent(new KeyboardEvent('keydown', {key}))
 }
 
 async function waitForAnimationFrame() {
