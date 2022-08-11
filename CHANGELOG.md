@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2022-08-11
+
+- Fix: Guard against determining menu position with cursor out of document range
+
 - Change: only write `[name]` and match text to `turbo-frame[src]`, don't alter
   `trix-mentions[src]`
 
